@@ -1,27 +1,37 @@
+name: Bright Security Scan (Crawler)
+
 on:
   push:
     branches:
       - main
 
 jobs:
-  wait_for:
-    name: Wait for any issues, gh-int + code_scanning_alerts on
+  bright_scan:
     runs-on: ubuntu-latest
-    container: node:16
+
     steps:
-      - name: Scan Start
+      - name: Run Bright scan with crawler discovery
         id: start
         uses: NeuraLegion/bright-github-actions/run-scan@release
         with:
           api_token: ${{ secrets.BRIGHT_TOKEN }}
           hostname: app.brightsec.com
-          name: Bright Scan - ${{ github.sha }}
-          restart_scan: $SCAN_ID
-      - name: Wait for breakpoint
-        id: wait
+          project_id: nMPiWLUjzmwZBasSqCvVLx
+          name: Amina - GitHub crawler scan ${{ github.sha }}
+
+          discovery_types: |
+            ["crawler"]
+
+          crawler_urls: |
+            ["http://www.brokencrystals.com"]
+
+      - name: Print scan URL
+        run: echo "Scan started at ${{ steps.start.outputs.url }}"
+
+      - name: Wait for scan and report to GitHub Security
         uses: NeuraLegion/bright-github-actions/wait-for@release
         with:
-          api_token:  ${{ secrets.BRIGHT_TOKEN }}
+          api_token: ${{ secrets.BRIGHT_TOKEN }}
           hostname: app.brightsec.com
           scan: ${{ steps.start.outputs.id }}
           wait_for: any
